@@ -1,8 +1,7 @@
 // src/_helpers/db.ts
-
-import config from '../../config.json';
-import mysql from 'mysql2/promise';
+import 'rootpath';
 import { Sequelize } from 'sequelize';
+import * as config from '../../config.json';
 
 export interface Database {
     User: any; // We'll type this properly after creating the model
@@ -11,18 +10,15 @@ export interface Database {
 export const db: Database = {} as Database;
 
 export async function initialize(): Promise<void> {
-    const { host, port, user, password, database } = config.database;
-
-    // Create database if it doesn't exist
-    const connection = await mysql.createConnection({ host, port, user, password });
-    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${database}\`;`);
-    await connection.end();
-
-    // Connect to database with Sequelize
-    const sequelize = new Sequelize(database, user, password, { dialect: 'mysql' });
+    // Use SQLite for easier development setup
+    const sequelize = new Sequelize({
+        dialect: 'sqlite',
+        storage: './database.sqlite',
+        logging: false // Disable SQL logging
+    });
 
     // Initialize models
-    const { default: userModel } = await import('../users/user.model');
+    const { default: userModel } = await import('../users/users.model');
     db.User = userModel(sequelize);
 
     // Sync models with database
